@@ -1,22 +1,16 @@
-import logo from './logo.svg';
+import logo from './spotify_logo.gif';
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <p> SPOTIFY PLAYLIST MAKER </p> 
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Marshall and Avery make cool shit, stay tuned. 
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <button>Authenticate</button> 
       </header>
     </div>
   );
