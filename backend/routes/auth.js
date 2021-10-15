@@ -1,6 +1,7 @@
 require('dotenv').config()
 var express = require('express');
 var router = express.Router();
+var base64 = require('base-64')
 const axios = require('axios').default; 
 if (typeof localStorage === "undefined" || localStorage === null) {
     var LocalStorage = require('node-localstorage').LocalStorage;
@@ -22,13 +23,13 @@ router.get('/', function(req, res) {
     '&client_id=' + process.env.SPOTIFY_ID +
     (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
     '&redirect_uri=' + encodeURIComponent(redirect_uri));
-
-}); 
+       
+})
 
 // GET code from auth flow URL 
 router.get('/callback', function(req, res) {
     var authCode = req.query.code
-    console.log(`Auth Code: ${authCode}`)
+    // console.log(`Success, your Auth Code: ${authCode}`)
 
     res.send(`okay good... \n the CODE is:  ${req.query.code.substring(0, 25)}...`);
     bearer(authCode);
@@ -36,21 +37,21 @@ router.get('/callback', function(req, res) {
 
 
 bearer = (authCode) => {
-axios({
-    url: 'https://accounts.spotify.com/api/token',
-    method: 'post',
-    headers: { 
-        'Authorization': 'Basic MWMyMzcwMzI2NjliNGUyNmFiMWM2NzczZjVjZTMyYzE6YWZlYzQ5Yzk2ODJiNDUyNGFkMmVjMTM0OThkZTRiYWQ=',
-        'Content-Type':'application/x-www-form-urlencoded'
-    },
-    params: {
-        grant_type: 'authorization_code',
-        code: authCode, 
-        redirect_uri: redirect
-    }
-}).then(function(response) {
-    saveAuthObject(response)
-  });
+    axios({
+        url: 'https://accounts.spotify.com/api/token',
+        method: 'post',
+        headers: { 
+            'Authorization': `Basic ${base64.encode(`${process.env.SPOTIFY_ID}:${process.env.SPOTIFY_SECRET}`)}`,
+            'Content-Type':'application/x-www-form-urlencoded'
+        },
+        params: {
+            grant_type: 'authorization_code',
+            code: authCode, 
+            redirect_uri: redirect
+        }
+    }).then(function(response) {
+        saveAuthObject(response)
+    });
 }; 
 
 refresh = () => {
@@ -58,7 +59,7 @@ refresh = () => {
         url: 'https://accounts.spotify.com/api/token',
         method: "post", 
         headers: { 
-            'Authorization': 'Basic MWMyMzcwMzI2NjliNGUyNmFiMWM2NzczZjVjZTMyYzE6YWZlYzQ5Yzk2ODJiNDUyNGFkMmVjMTM0OThkZTRiYWQ=',
+            'Authorization': `Basic ${base64.encode(`${process.env.SPOTIFY_ID}:${process.env.SPOTIFY_SECRET}`)}`,
             'Content-Type':'application/x-www-form-urlencoded'
         },
         params: {
@@ -70,14 +71,16 @@ refresh = () => {
     })
 }; 
 
+
+
 function saveAuthObject(response) {
     localStorage.setItem('auth', response.data.access_token); 
     localStorage.setItem('authObject', JSON.stringify(response.data)); 
-
     console.log("\n\n\n"); 
     console.log(localStorage.getItem('auth')); 
-    console.log(JSON.parse(localStorage.getItem('authObject'))); 
+
 
 }; 
+
 
 module.exports = router; 
