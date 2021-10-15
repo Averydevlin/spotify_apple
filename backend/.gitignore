@@ -130,6 +130,6 @@ dist
 spotifyapp.code-workspace
 
 ### auth stuff ### 
-.scratch/
+scratch/
 
 # End of https://www.toptal.com/developers/gitignore/api/node
