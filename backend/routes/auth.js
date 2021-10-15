@@ -49,13 +49,35 @@ axios({
         redirect_uri: redirect
     }
 }).then(function(response) {
+    saveAuthObject(response)
+  });
+}; 
+
+refresh = () => {
+    axios({
+        url: 'https://accounts.spotify.com/api/token',
+        method: "post", 
+        headers: { 
+            'Authorization': 'Basic MWMyMzcwMzI2NjliNGUyNmFiMWM2NzczZjVjZTMyYzE6YWZlYzQ5Yzk2ODJiNDUyNGFkMmVjMTM0OThkZTRiYWQ=',
+            'Content-Type':'application/x-www-form-urlencoded'
+        },
+        params: {
+            grant_type: 'refresh_token',
+            refresh_token: process.env.REFRESH_TOKEN,
+        }
+    }).then(function(response) {
+        saveAuthObject(response); 
+    })
+}; 
+
+function saveAuthObject(response) {
     localStorage.setItem('auth', response.data.access_token); 
     localStorage.setItem('authObject', JSON.stringify(response.data)); 
 
     console.log("\n\n\n"); 
     console.log(localStorage.getItem('auth')); 
     console.log(JSON.parse(localStorage.getItem('authObject'))); 
-  });
+
 }; 
 
-module.exports = router;
+module.exports = router; 
