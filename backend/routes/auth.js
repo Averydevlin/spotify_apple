@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var base64 = require('base-64')
 const axios = require('axios').default; 
+const { response } = require('express');
 if (typeof localStorage === "undefined" || localStorage === null) {
     var LocalStorage = require('node-localstorage').LocalStorage;
     localStorage = new LocalStorage('./scratch');
@@ -11,8 +12,6 @@ if (typeof localStorage === "undefined" || localStorage === null) {
 /* GET access token. */
 
 var redirect = 'https://d8b6-2001-569-56c2-d800-2520-7cc9-5589-82cf.ngrok.io/auth/callback/'
-var authorizeURL = 'https://accounts.spotify.com/api/token' 
-
 
 // Routes for Authentication and Getting the Auth Code 
 router.get('/', function(req, res) {
@@ -28,59 +27,70 @@ router.get('/', function(req, res) {
 
 // GET code from auth flow URL 
 router.get('/callback', function(req, res) {
-    var authCode = req.query.code
-    // console.log(`Success, your Auth Code: ${authCode}`)
+    let authCode = req.query.code
+    console.log(`Success, your Auth Code: ${authCode}`)
 
-    res.send(`okay good... \n the CODE is:  ${req.query.code.substring(0, 25)}...`);
-    bearer(authCode);
+    res.send(`okay good... \n the CODE is:  ${authCode.substring(0, 25)}...`);
+    console.log(`Auth code in get call ${authCode}`); 
+    getBearer(authCode); 
 })
 
+const getBearer = async (authCode) => { 
 
-bearer = (authCode) => {
-    axios({
-        url: 'https://accounts.spotify.com/api/token',
-        method: 'post',
-        headers: { 
-            'Authorization': `Basic ${base64.encode(`${process.env.SPOTIFY_ID}:${process.env.SPOTIFY_SECRET}`)}`,
-            'Content-Type':'application/x-www-form-urlencoded'
-        },
-        params: {
-            grant_type: 'authorization_code',
-            code: authCode, 
-            redirect_uri: redirect
-        }
-    }).then(function(response) {
-        saveAuthObject(response)
-    });
-}; 
+    try {
+        const resp = await axios({
+            url: 'https://accounts.spotify.com/api/token',
+            method: 'post',
+            headers: { 
+                'Authorization': `Basic ${base64.encode(`${process.env.SPOTIFY_ID}:${process.env.SPOTIFY_SECRET}`)}`,
+                'Content-Type':'application/x-www-form-urlencoded'
+            },
+            params: {
+                grant_type: 'authorization_code',
+                code: authCode,
+                redirect_uri: redirect
+            }
+        }); 
+        
+        var tokenData = resp.data; 
 
-refresh = () => {
-    axios({
-        url: 'https://accounts.spotify.com/api/token',
-        method: "post", 
-        headers: { 
-            'Authorization': `Basic ${base64.encode(`${process.env.SPOTIFY_ID}:${process.env.SPOTIFY_SECRET}`)}`,
-            'Content-Type':'application/x-www-form-urlencoded'
-        },
-        params: {
-            grant_type: 'refresh_token',
-            refresh_token: process.env.REFRESH_TOKEN,
-        }
-    }).then(function(response) {
-        saveAuthObject(response); 
-    })
-}; 
+        saveAuthObject(tokenData); 
+        return tokenData; 
+
+    } catch (err) {
+        console.error(err.response.data); 
+        getRefresh(); 
+    }
+}
+
+const getRefresh = async () => { 
+    try{
+        const resp = await axios({headers, 
+
+            params: { 
+                grant_type: 'refreshToken',
+                refresh_token: localStorage.getItem('refreshToken'),
+            }
+        })
+        console.log('decided to use a refresh token')
+        saveAuthObject(resp); 
+        
+    } catch {
+        console.error(err); 
+        console.log('your refresh token failed to run'); 
+    }
+}
 
 
+async function saveAuthObject(response) { 
+    var stringResponse = JSON.stringify(response); 
 
-function saveAuthObject(response) {
-    localStorage.setItem('auth', response.data.access_token); 
-    localStorage.setItem('authObject', JSON.stringify(response.data)); 
+    console.log(`saveAuthObject function ran \n\n\n\n\n\n ${stringResponse}`)
+    localStorage.setItem('accessToken', response.access_token); 
+    localStorage.setItem('refreshToken', response.refresh_token); 
     console.log("\n\n\n"); 
-    console.log(localStorage.getItem('auth')); 
-
+    console.log(localStorage.getItem('accessToken')); 
 
 }; 
-
 
 module.exports = router; 

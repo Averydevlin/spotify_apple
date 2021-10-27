@@ -1,0 +1,22 @@
+.Title {
+    margin: 0;
+    padding: 0;
+    font-size: 60px;
+    color: #173839;
+    /* font-family: Fugaz_One; */
+    font-family: Poppins; 
+    line-height: 1;
+    font-weight: normal;
+    letter-spacing: -1px;   
+}
+
+@media screen and (max-width: 800px) {
+    .Title {
+        font-size: 34px;
+        letter-spacing: 0px;
+    }
+    .Title .white .memorable {
+        line-height: 10px;
+    }
+    
+}
